@@ -1,0 +1,76 @@
+PROC ARIMA opitions;
+     BY variables;
+     IDENTIFY VAR=variables options;
+     ESTIMATE options;
+     FORECAST options；
+
+##PROC ARIMA opitions：
+options：
+     DATA=SAS-data-set（数据集）
+     
+##BY opitions：
+一个BY语句可以用在ARIMA过程中以处理一个由BY变量定义的成组观测数据集。请注意所有指定的IDENTIFY,ESTIMATE和FORECAST语句都应用于所有BY变量组。
+
+##IDENTIFY VAR=variable  opitions：
+IDENTIFY语句指定被建模的时间序列，如需要可差分序列，以及计算统计量以帮助识别要拟合的模型。对每个你希望建模的时间序列都应使用一个IDENTIFY语句。
+如果其他时间序列用作随后ESTIMATE语句的输入，则这些序列必须在IDENTIFY语句的CROSSCORR=列表中。
+CENTER——通过减去样本均值以中心化时间序列。在中心化序列上进行分析。然后，在生成预测时，均值被补回来。请注意中心化在差分后进行。CENTER选项通常和ESTIMATE语句的NOCONSANT选项联合使用。
+CLEAR——删除所有旧模型。当你为了避免输入变量被预白噪声化而希望删除旧模型时，该选项是很有用的。
+CROSSCORR——(variable(d11,d12,---d1k)。给与VAR=说明语句给出的响应变量交互相关的变量命名。
+DATA——SAS-data-set——指定包含时间序列的输入SAS数据集。
+NLAG=number——指明计算自相关系数和互相关系数过程中所需要考虑的时间间隔个数。为了获得一个ARIMA(p,d,q)模型的初估计，NLAG值必须至少为p+d+q。NLAG缺省值时，指定为24和观测个数的四分之一中较小的。
+NOMISS——只使用第一个无丢失值的连贯序列。缺省情况下，则使用所有观测。
+NOPRINT——取消IDENTIFY语句产生的标准打印输出。
+OUTCOV=SAS-data-set——把自协方差、自相关系数、逆自相关系数、偏自相关系数以及互协方差写到一个输出SAS数据集中。
+VAR=variable——命名包含需分析的时间序列。VAR=X(1)表示对X一阶差分，VAR=X(1,1)对X进行2次差分，VAR=X(2)对X进行2阶差分。
+
+##ESTIMATE  opitions：
+ESTIMATE 语句对前面IDENTIFY语句中指定的响应序列拟合ARMA模型或转移函数模型，并且产生其参数估计。ESTIMATE语句也打印出检查模型的诊断信息。
+1.用于定义模型和控制诊断统计量的选项
+ALTPARM——指定转移函数的全程可选参数。
+INPUT=variable——指定输入变量和它们的转移函数。所用变量必须包含在前面IDENTIFY语句中CROSSCORR=列表中。
+METHOD=ML/ULS/CLS——指定估计方法。
+NOCONSTANT/NOINT——取消模型中常量或均值。
+NODF——用误差平方和（SSE）除以残差个数来估计方差。
+NOPRINT——取消ESTIMATE语句产生的标准打印输出。
+P=order/P=(lag,---lag)---(lag,---lag)——指定模型的自回归部分，如缺省，则不拟合任何自回归参数。一连串括号内的列表指定了一个因子模型。如，P=(1,2,5)(6,12)指定了自回归模型：
+(1-a11B-a12B2-a13B5)(1-a21B6-a22B12)
+PLOT——绘出残差自相关系数图。残差的样本自相关系数、样本逆自相关系数以及偏自相关系数图。
+Q=order/Q=(lag,---lag)---(lag,---lag)——指定模型的滑动平均部分，如缺省，则模型不包含滑动平均部分。
+2.输出数据集选项
+OUTEST=SAS-data-set——把参数估计写到一个输出数据集。如使用了OUTCORR或OUTCOV选项，则估计值的相关系数和协方差也被写到OUTEST=数据集中。
+OUTCORR——把参数估计的相关系数写到OUTEST=数据集中。
+OUTCOV=把参数估计的协方差写到OUTEST=数据集中。
+OUTMODEL=SAS-data-set——把模型和参数估计写到输出数据集中。
+OUTEST=SAS-data-set——把模型诊断统计量写到输出数据集中。
+3.用于指定参数值的选项
+下列选项使你能够对某些参数指定数值。这些选项可以为估计过程提供初始值或者你可以为FORECAST阶段指定固定参数值并用NOEST选项取消估计过程。缺省情况下，ARIMA过程找到初始参数估计并用这些估计值作为迭代估计过程的初始值。
+如果对于任何参数指定了值，则应该给出全部参数的值。给出值的个数必须和模型的说明一致。
+AR=value---——列出自回归参数的初始值。
+INITVAL=(initializer-spec variable---)——指定模型转移函数部分参数的初始值。
+MA=value---——列出滑动平均参数的初始值。
+MU=value——指定MU参数。
+NOEST——使用AR=.MA=,INITVAL=和MU=选项中指定的参数作最终参数值。除了残差方差的估计外，其余估计过程都被取消。指定的参数将被随后的FORECAST语句直接引用。当指定NOEST时，标准误差、t比值、估计值间的相关系数显示为0.
+4.控制迭代估计过程的选项
+下列选项可用于控制最小化误差平方和或最大化对数似然函数的迭代过程。这些调节选项通常并不需要，但当收敛问题出现时这些选项可能是有用的。
+BACKLIM=n——从均方和或似然函数中省略指定初始值很敏感的瞬时性可能是有用的。
+CONVERGE=value——指定收敛准则。当参数估计的最大改变量小于CONVERGE=选项值时，则认为迭代收敛，如果参数估计的绝对值大于0.01，则使用相对改变量（nelative change）;否则，使用估计值的绝对改变量。缺省状态是CONVERGE=0.01
+DELTA=value——指定为计算数值导数的扰动值。缺省状态下，DELTA=0.001.
+GRID——打印误差均方和（SSE）或被集中在最终估计附近的参数空间的某个小格栅中的对数似然曲面。
+GRIDVAL=number——控制由GRID选项所打印的格栅的间距。
+MAXITER=n/MAXIT=n——指定允许迭代的最多次数。
+NOLS——从初估计开始最大似然或无条件最小的均方迭代。而不是从四次迭代后生成的条件最小均方估计开始迭代。
+NOSTABLE——指定关于模型的噪声部分的自回归和滑动均值参数估计不被分别限制在平稳和可逆区域中。
+PRINTALL——打印初估计结果和最终估计过程中的迭代。
+SINGULAR=value——指定检查奇异性的准则。如果在做削去变换的某一时刻找不到不小于SINGULAR=数值的主元，那么矩阵一定奇异。缺省状态下，SINGULAR=1E-7.
+
+##FORECAST  opitions
+FORECAST语句使用前面ESTIMATE语句生成的参数估计来产生时间序列预测值。
+ALPHA=value——设定预测置信限。Value必须在0和1之间。缺省状态下ALPHA=0.05,生成95%置信区间。
+BACK=n——指定数据结束前的观测个数。在数据结束时开始多步预测。BACK=选项值必须小于或等于观测个数减去参数个数。缺省状态下BACK=0.这意味预测从可获得数据的末尾开始。
+ID=variable——命名输入集中的一个变量。
+INTERVAL=interval/INTERVAL=n——指定观测的时间间隔。
+LEAD=n——指定要计算的多步预测值的个数。
+NOOUTALL——只将最终预测包含在输出集中，不包括预测周期前对数据的一步预测。
+OUT=SAS-data-set——把预测值和其它值写到输出数据集中。如未指定OUT=,则使用PROC ARIMA语句中指定的OUT=数据集。如果PROC ARIMA语句中未指定OUT=,则不生成输出数据集.
+PRINTALL——打印出贯穿整个数据集的FORECAST计算过程。
