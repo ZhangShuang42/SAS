@@ -1,3 +1,4 @@
+#1
 data gdp;
 input year 2-5 qtr 7-8  x 12-18;
  y=log10(x) ;
@@ -103,10 +104,29 @@ plot z*t=1;
 symbol1 c=black v=none i=join;
 run;
 
-
 proc arima;
  identify var=z  nlag=25;
  estimate q=1 maxiter=100 method=uls;
  estimate q=2 maxiter=100 method=uls;
  estimate q=3 maxiter=100 method=uls;
 run;
+
+#2-ppt
+data gdp2;   
+set shx1.gdp1;
+y=log10(x);
+z=dif(dif(y));
+time=intnx('quarter','01jan1983'd,_n_-1);
+format time date.;  #对国内生产总值进行平稳化处理。对先去对数，再进行二阶差分。
+
+proc gplot data=gdp2;
+plot z*time=1;
+symbol1 c=blue v=dot i=join;
+run;   #绘制时序图
+
+proc arima data=gdp2;
+identify var=z nlag=25;   #模型识别：从时序图可以看出，序列Xt是平稳的。用Box-Jenkins方法建模，Xt的自相关函数和偏自相关函数，可以判断出样本自相关系数序列3步截尾，偏自相关系数缓慢衰减，呈拖尾现象。故可初步判断序列Xt适合MA模型。
+estimate q=1 maxiter=100 method=uls;
+estimate q=2 maxiter=100 method=uls;
+estimate q=3 maxiter=100 method=uls;
+run;    #拟合MA(m)模型、模型适应性检验、残差自相关检验
