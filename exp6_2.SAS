@@ -90,6 +90,16 @@ run;
 
 
 #2-ppt
+data houseprice;
+input x;
+y=dif(x);
+t=intnx(‘month’,’01jan2000’d,_n_-1);
+t1=_n_;
+format t monyy.;
+cards;/*数据*/
+;
+run;   #建立SAS数据文件
+
 proc gplot data=houseprice;
 plot x*t=1 y*t1=2;
 symbol1 c=black v=star i=join;
