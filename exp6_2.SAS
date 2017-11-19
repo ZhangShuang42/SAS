@@ -87,3 +87,29 @@ estimate p=0 q=2 noconstant plot;
 run;
 forecast lead=8;
 run;
+
+
+#2-ppt
+proc gplot data=houseprice;
+plot x*t=1 y*t1=2;
+symbol1 c=black v=star i=join;
+symbol2 c=blue v=dot i=join;
+run;  #绘制时间序列图
+
+proc arima data=houseprice;
+identify var=x  stationarity =(adf=1); 
+identify var=y  stationarity =(adf=1);
+run;   #计算自相关系数及单位根检验
+
+Proc arima;
+Identify var=x(1) stationarity=(adf=1);
+Estimate q=1 method=cls noint;
+Forecast lead=3 id=t1 out=results;
+run;   #对住房均价序列建立ARIMA模型并进行3期预测
+
+Proc gplot data=results;
+Plot x*t1=1 forecast*t1=2 l95*t1=3 u95*t1=3/overlay;
+Symbol1 c=blue v=star i=none;
+Symbol2 c=red v=none i=join l=1 w=1;
+Symbol3 c=green v=none i=join l=2 w=2;
+run;   #对住房均价序列建立ARIMA模型的拟合效果图
