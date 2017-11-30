@@ -1,4 +1,4 @@
-#季节性时间序列模型
+#随机季节模型exp7.1
 
 data a; 
 input x@@;
@@ -45,4 +45,86 @@ proc gplot data=out;
 plot x*time=1 forecast*time=2 /overlay;
 symbol1 c=black i=none v=star;
 symbol2 c=red i=join v=none;
+run;
+
+
+#exp7.2
+
+data a;
+input x@@;
+dif1_12=dif12(dif(x));
+time=intnx('month','1jan1948'd,_n_-1);
+format time year4.;
+cards;
+446 650 592 561 491 592 604 635	580 
+510 553 554 628 708 629 724 820	865 
+1007 1025 955 889 965 878 1103 1092 978 
+823 827 928 838 720 756 658 838 684
+;
+proc gplot;
+plot x*time dif1_12*time;
+symbol c=black i=join v=none; 
+proc arima;
+identify var=x(1,12);
+estimate p=1 q=(1)(12) noint;
+forecast lead=0 id=time out=out;
+proc gplot data=out;
+plot x*time=1 forecast*time=2 /overlay;
+symbol1 c=black i=none v=dot;
+symbol2 c=red i=join v=none;
+run;
+
+
+#exp7.4/5
+
+proc arima 
+data=shx1.xiaoshou;
+identify var=x nlag=18;
+run;
+
+
+#exp7.6
+
+data a;
+set shx1.qdwg;
+x1=lag(x)+lag2(x)+lag3(x)+lag4(x);
+x2=-(lag(x)-lag2(x)+lag3(x)-lag4(x));
+x3=lag(x)-lag3(x);x4=-(lag2(x)-lag4(x));
+x5=dif4(x);
+proc autoreg data=a;
+model x5= x1 x2 x3 x4/nlag=1 method=ml noint;
+run;
+
+#
+
+data a;
+input x time$;
+x1t=lag(x)+lag2(x)+lag3(x)+lag4(x);
+x2t=-(lag(x)-lag2(x)+lag3(x)-lag4(x));
+x3t=lag(x)-lag3(x);
+x4t=-(lag2(x)-lag4(x));
+dif4x=dif4(x);
+cards;
+/数据/
+;
+proc autoreg;
+model dif4x=x1t x2t x3t x4t/nlag=1 method=ml noint;
+run;
+proc autoreg;
+model dif4x=x1t x2t/nlag=1 method=ml noint;
+run;
+
+
+#exp7.7
+
+data a;
+set shx1.sars;
+where time<='12dec2002'd;
+proc arima;
+identify var=x;
+estimate p=(1,7,12,13) maxit=100 noint method=ml;
+run;
+proc arima;
+identify var=x;
+estimate p=(1) (12) maxit=100 noint method=ml;
 run;
