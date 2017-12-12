@@ -128,3 +128,41 @@ proc arima;
 identify var=x;
 estimate p=(1) (12) maxit=100 noint method=ml;
 run;
+
+#X-11
+
+data xiaoshoue;
+input x;
+time=intnx('month','01jan1993'd, _n_-1);
+format time date.;
+cards;
+/数据/
+;
+proc x11 data=xiaoshoue;
+monthly date=time;
+var x;
+tables b1 d10 d12 d11 d13 c15 f2 f1 e6 d8;
+output out=h b1=x d12=T d13=I d10=S;
+Run;
+
+#绘制原始数据的时序图、季节调整后数据时序图、不规则成分时序图、季节成分时序图：
+proc gplot;
+plot x*time; symbol1 v=star i=spline;
+run;
+proc gplot;
+plot I*time; symbol1 v=star i=spline;
+run;
+proc gplot;
+plot S*time; symbol1 v=star i=spline;
+run;
+
+#建立线性回归方程进行预测：
+data xiaooshou1;
+input T_t@@;t=_n_;
+cards;
+/表7.15/
+;
+proc reg; model x=t/p;
+Run;
+
+
