@@ -1,0 +1,26 @@
+data tielu;
+input x@@;
+t=intnx('month','01jan2012'd,_n_-1);
+format t month.;
+y=dif12(dif(x));
+cards;
+16468	15573	14457	16452	14877	16226	17984	18517	16914	15086	14185	14815
+18757	14044	16854	17502	16232	18043	19931	20287	19197	16407	15557	17375
+19050	15975	18054	19843	19037	19456	22386	23515	20986	17919	17056	22427
+17850	19290	21554	21091	21219	20614	24776	25539	21802	22686	18816	18200
+21161	24112	21242	23900	22886	23200	26818	28007	23918	25001	20409	20768
+24756	25525	22624	26504	26397	24077	29378	30692	24884	27621	22703
+;
+proc gplot;
+plot x*t y*t;
+symbol v=none c=blue i=join;
+run;
+proc arima;
+identify var=x(1,12) stationarity=(adf=1) nlag=25;
+estimate q=(1)(3) noint;
+forecast lead=2 id=t out=out;
+proc gplot data=out;
+plot x*t=1 forecast*t=2/overlay;
+symbol1 v=star i=join c=blue;
+symbol2 v=none i=join c=red;
+run;
